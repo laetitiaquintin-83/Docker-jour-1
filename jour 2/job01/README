@@ -1,0 +1,37 @@
+# Jour 2 - Job 01 : Serveur Apache et PHP avec Docker
+
+Ce projet consiste à packager un serveur web Apache équipé du moteur d'exécution PHP au sein d'une image Docker personnalisée, afin d'exécuter la fonction native `phpinfo();` et d'analyser les configurations de l'environnement.
+
+## 📁 Structure des Fichiers source
+
+* **`index.php`** : Un script minimaliste contenant uniquement la balise d'ouverture PHP et la commande requise de 10 caractères pour lister les métadonnées du serveur :
+  ```php
+  <?php phpinfo();
+
+  Dockerfile : La recette d'instructions Docker basée sur l'image officielle stable d'Apache et PHP. Il se charge de copier notre script local dans le dossier public d'Apache et d'exposer le port web :
+
+  FROM php:8.2-apache
+COPY index.php /var/www/html/
+EXPOSE 80
+
+🚀 Étapes de déploiement et Commandes exécutées
+1. Construction de l'image Docker (Build)
+Pour assembler notre environnement personnalisé, nous utilisons la commande de build en lui attribuant un nom explicite :
+
+docker build -t mon-image-apache-php .
+
+2. Instanciation du conteneur (Run)
+Conformément aux spécifications de l'énoncé, l'application configurée en interne sur le port 80 est exposée sur le port 8080 de la machine hôte. Le conteneur est lancé en tâche de fond (-d) :
+
+    docker run -d -p 8080:80 --name container-apache-php mon-image-apache-php
+
+    Voici le suivi des commandes de préparation et d'exécution dans le terminal de développement :
+
+🌍 Vérification et Rendu final
+En naviguant sur http://localhost:8080 depuis notre navigateur internet, le serveur Apache interprète avec succès le script PHP. La page officielle des configurations système s'affiche correctement :
+
+🛑 Arrêt du Service
+Une fois les vérifications terminées, le conteneur est stoppé pour libérer le port 8080 de la machine :
+
+    docker stop container-apache-php
+    
