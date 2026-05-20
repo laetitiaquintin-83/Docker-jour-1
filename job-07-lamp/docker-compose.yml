@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  # 1. Le serveur Web Apache + PHP 8.2
+  php:
+    image: php:8.2-apache
+    container_name: lamp-php-container
+    ports:
+      - "${PORT_PHP}:80"
+    volumes:
+      - ./src:/var/www/html
+    depends_on:
+      - db
+
+  # 2. La base de données MySQL 8 avec volume persistant
+  db:
+    image: mysql:8
+    container_name: lamp-db-container
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  # 3. L'interface graphique phpMyAdmin connectée d'office
+  phpmyadmin:
+    image: phpmyadmin
+    container_name: lamp-pma-container
+    ports:
+      - "${PORT_PHPMYADMIN}:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    depends_on:
+      - db
+
+# Déclaration du volume nommé pour sauver les données en cas d'arrêt
+volumes:
+  mysql_data:

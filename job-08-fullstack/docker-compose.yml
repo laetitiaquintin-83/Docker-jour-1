@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  # Serveur Web PHP avec installation du driver MySQL à la volée
+  web:
+    image: php:8.2-apache
+    container_name: repaire-web-app
+    ports:
+      - "${PORT_WEB}:80"
+    volumes:
+      - ./src:/var/www/html
+    # Cette ligne magique télécharge et active le driver pdo_mysql au démarrage !
+    command: sh -c "docker-php-ext-install pdo pdo_mysql && apache2-foreground"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # Base de données MySQL + Injection automatique du script init.sql
+  db:
+    image: mysql:8
+    container_name: repaire-db-server
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - repaire_db_data:/var/lib/mysql
+      - ./config:/docker-entrypoint-initdb.d # Le dossier magique pour injecter le SQL !
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # phpMyAdmin pour administrer visuellement
+  phpmyadmin:
+    image: phpmyadmin
+    container_name: repaire-pma
+    ports:
+      - "${PORT_DB_ADMIN}:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    depends_on:
+      - db
+
+volumes:
+  repaire_db_data:

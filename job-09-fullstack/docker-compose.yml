@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # L'application PHP liée au Dockerfile
+  web:
+    build: .
+    container_name: repaire-web-app-j09
+    ports:
+      - "${PORT_WEB}:80"
+    volumes:
+      - ./src:/var/www/html
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # La base de données MySQL
+  db:
+    image: mysql:8
+    container_name: repaire-db-server-j09
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - repaire_db_data_j09:/var/lib/mysql
+      - ./config:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # phpMyAdmin
+  phpmyadmin:
+    image: phpmyadmin
+    container_name: repaire-pma-j09
+    ports:
+      - "${PORT_DB_ADMIN}:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    depends_on:
+      - db
+
+volumes:
+  repaire_db_data_j09:
